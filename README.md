@@ -1,6 +1,5 @@
-Few weeks back I needed a, ascii value of a photo. So I AI for generating it.
-So I was wondering if I could build it myself with the following 'rules'
-
+After using AI for converting a PNG to ASCII I was wondering how you could do it your self. 
+So I made a 'challenge' for myself with the following "rules":
 - Pure ruby, no deps.
 - No code generation by AI, LLM etc...
 - Can use AI for a guidance (see below)

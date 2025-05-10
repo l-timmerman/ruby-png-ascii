@@ -5,6 +5,7 @@ class Convert
 
     File.open(path) do |file|
       validate_png(file)
+      read_image_header(file)
     end
   end
 
@@ -43,9 +44,26 @@ class Convert
     length = file.read(4).unpack1("N")
     type = file.read(4)
     data = file.read(length)
-    # Not using it for now
+    # Not checking it for now
     crc = file.read(4)
     [type, data]
+  end
+
+  def self.read_image_header(file)
+    type, data = read_chunk(file)
+    if !type.eql?("IHDR")
+      puts "Invalid image header: chunk type is #{type}, should be: IHDR"
+      exit
+    end
+    width, height, bit_depth, color_type, comp, filter, interlace = data.unpack("NNCCCCC")
+
+    puts "Width: #{width}"
+    puts "Height: #{height}"
+    puts "Bit depth: #{bit_depth}"
+    puts "Color type: #{color_type}"
+    puts "Compression: #{comp}"
+    puts "Filter: #{filter}"
+    puts "Interlace: #{interlace}"
   end
 end
 

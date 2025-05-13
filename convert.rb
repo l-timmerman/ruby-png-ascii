@@ -11,7 +11,6 @@ class Convert
     width, color_type = read_image_header(file)
     inflated_data = inflate_chunks(file)
 
-
     bpp = color_type == 2 ? 3 : 4
     row_size = 1 + (width * bpp)
     prev_scanline = nil
@@ -33,24 +32,20 @@ class Convert
      reconstructed_scanline = scanline_bytes.map.with_index do |filt_x, index|
         recon_a =
         case filter_type
+        # Filt(x)
         when 0
           filt_x
+        # Filt(x) + Recon(a)
         when 1
-          if index > 0 && recon_a
-            # Filt(x) + Recon(a)
-            filt_x + recon_a
-          else
-            filt_x
-          end
+          filt_x + recon_a.to_i
+        # Filt(x) + Recon(b)
         when 2
-          # Filt(x) + Recon(b)
           filt_x
         when 3
           filt_x
         when 4
           filt_x
         end
-
         recon_a
       end
       prev_reconstructed_scanline = reconstructed_scanline

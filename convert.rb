@@ -11,9 +11,50 @@ class Convert
     width, color_type = read_image_header(file)
     inflated_data = inflate_chunks(file)
 
+
     bpp = color_type == 2 ? 3 : 4
     row_size = 1 + (width * bpp)
+    prev_scanline = nil
+    prev_reconstructed_scanline = nil
 
+    reconstructed_scanlines = []
+    (0...inflated_data.length).step(row_size).each do |offset|
+
+      # first byte of the 'row' is the filter type (https://www.w3.org/TR/png/#7Filtering)
+      filter_type = inflated_data.getbyte(offset)
+      # the bytes for pixel information
+      scanline_bytes = inflated_data[(offset + 1)...(offset + row_size)].bytes
+
+
+      # https://www.w3.org/TR/png/#9Filter-types
+      # c b
+      # a x
+    recon_a = nil
+     reconstructed_scanline = scanline_bytes.map.with_index do |filt_x, index|
+        recon_a =
+        case filter_type
+        when 0
+          filt_x
+        when 1
+          if index > 0 && recon_a
+            # Filt(x) + Recon(a)
+            filt_x + recon_a
+          else
+            filt_x
+          end
+        when 2
+          # Filt(x) + Recon(b)
+          filt_x
+        when 3
+          filt_x
+        when 4
+          filt_x
+        end
+
+        recon_a
+      end
+      prev_reconstructed_scanline = reconstructed_scanline
+    end
   end
 
   private

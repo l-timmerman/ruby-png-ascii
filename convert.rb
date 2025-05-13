@@ -1,12 +1,19 @@
+require "zlib"
 class Convert
 
   def self.parse_file
     path = png_path
+    file = File.open(path)
 
-    File.open(path) do |file|
-      validate_png(file)
-      read_image_header(file)
-    end
+    validate_png(file)
+
+    # Extract width and color_type from image header
+    width, color_type = read_image_header(file)
+    inflated_data = inflate_chunks(file)
+
+    bpp = color_type == 2 ? 3 : 4
+    row_size = 1 + (width * bpp)
+
   end
 
   private
@@ -28,6 +35,7 @@ class Convert
     png_path
   end
 
+
   def self.validate_png(file)
     # https://www.w3.org/TR/png/#3PNGsignature
     hex_png_signature = "89 50 4E 47 0D 0A 1A 0A".split.map { |hex| hex.to_i(16) }
@@ -45,10 +53,11 @@ class Convert
     type = file.read(4)
     data = file.read(length)
     # Not checking it for now
-    crc = file.read(4)
+    _crc = file.read(4)
     [type, data]
   end
 
+  # https://www.w3.org/TR/png/#11IHDR
   def self.read_image_header(file)
     type, data = read_chunk(file)
     if !type.eql?("IHDR")
@@ -64,7 +73,20 @@ class Convert
     puts "Compression: #{comp}"
     puts "Filter: #{filter}"
     puts "Interlace: #{interlace}"
+    [width, color_type]
   end
+
+  def self.inflate_chunks(file)
+    encoded_data = ""
+    while(!file.eof)
+      type, data = read_chunk(file)
+      if type.eql?("IDAT")
+        encoded_data += data
+      end
+    end
+    Zlib::Inflate.inflate(encoded_data)
+  end
+
 end
 
 puts Convert.parse_file
